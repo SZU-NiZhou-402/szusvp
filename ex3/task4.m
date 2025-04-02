@@ -1,3 +1,4 @@
+% 分别选择一帧无声、清音和浊音的语音，用Matlab画出它们的对数幅度谱（语音分析中如无特别，一般“频谱”均指“对数幅度谱”），并简要分析三者频谱的特性和区别（包括基频、共振峰、能量在整个频带的分布等）。
 clc;clear;
 [y, Fs] = audioread('ex3/task1.wav');
 
@@ -11,68 +12,47 @@ overlap = frame_length_samples - frame_shift_samples;
 frames = buffer(y, frame_length_samples, overlap, 'nodelay');
 num_frames = size(frames, 2);
 
-widewindowLength = 512;%帧长
-widewin = hamming(widewindowLength,'periodic');%窗口函数（汉明窗）
-wideoverlap = widewindowLength/2; %帧移（一般为帧长的一半）
-narrowwindowLength = 64;
-narrowwin = hamming(narrowwindowLength,'periodic');
-narrowoverlap = narrowwindowLength/2;
+frame_voiced = frames(:,64);
+frame_unvoiced = frames(:, 230);
+n = length(frame_voiced);
+autocorr_voiced = xcorr(frame_voiced, 'coeff');
+autocorr_unvoiced = xcorr(frame_unvoiced, 'coeff');
+
+
+cepstrum_voiced = real(ifft(log(abs(fft(frame_voiced)))));
+cepstrum_unvoiced = real(ifft(log(abs(fft(frame_unvoiced)))));
+
+cepstrum_voiced = cepstrum_voiced(1:n);
+cepstrum_unvoiced = cepstrum_unvoiced(1:n);
+
+autocorr_voiced_positive = autocorr_voiced(n:end); % 从中点开始，取正向部分
+autocorr_unvoiced_positive = autocorr_unvoiced(n:end); % 同上
+
+
+% 绘制倒谱系数图
 figure;
-ffTLength = 512; %做DFT的点数，一般和帧长一样
-t = (1/Fs) * (0:numel(y)-1);%
-subplot(3,1,1);plot(t,y);title('波形图');
-subplot(3,1,2);spectrogram(y,widewin,wideoverlap,ffTLength,Fs,'yaxis');title('窄带语谱图')
-subplot(3,1,3);spectrogram(y,narrowwin,narrowoverlap,ffTLength,Fs,'yaxis');title('宽带语谱图')
+subplot(2,1,1);
+plot((1:length(autocorr_unvoiced_positive)), cepstrum_voiced);
+xlabel('时间点');
+ylabel('倒谱系数');
+title('清音语音的倒谱系数');
 
-%浊音
-[a,g] = lpc(frame_voiced,20);
-[H_lpc, w_lpc] = freqz(1, a, length(frame_voiced), Fs);
-residual_signal = filter(a, 1, frame_voiced);
+subplot(2,1,2);
+plot((1:length(autocorr_unvoiced_positive)), cepstrum_unvoiced);
+xlabel('时间点');
+ylabel('倒谱系数');
+title('浊音语音的倒谱系数');
 
-fft_frame = fft(frame_voiced);
-fft_frame = fft_frame(1:length(fft_frame)/2); 
-freq_axis = linspace(0, Fs/2, length(fft_frame));
+%绘制自相关函数图
 figure;
-subplot(4, 1, 1);
-time_voiced = (0:length(frame_voiced)-1) / Fs;
-plot(time_voiced, frame_voiced);
-xlabel('时间 (秒)');ylabel('振幅');title('浊音帧的时域波形');
-% 绘制LPC参数频谱
-subplot(4,1,2);
-plot(w_lpc, 20*log10(abs(H_lpc)));hold on;
-plot(freq_axis, 20*log10(abs(fft_frame)));hold off;
-legend('LPC参数谱', '傅立叶频谱');
-xlabel('频率 (Hz)');ylabel('幅度 (dB)');title('浊音语音的频谱');
-% 绘制傅立叶频谱
-subplot(4,1,3);
-plot(residual_signal);
-xlabel('样本点');ylabel('幅度');title('预测残差信号的波形');
+subplot(2,1,1);
+plot((1:length(autocorr_voiced_positive)), autocorr_voiced_positive);
+xlabel('时间点');
+ylabel('自相关系数');
+title('清音语音的自相关函数');
 
-subplot(4,1,4);
-fft_residual_signal = fft(residual_signal);
-fft_residual_signal = fft_residual_signal(1:length(fft_residual_signal)/2);
-freq_axis1 = linspace(0, Fs/2, length(fft_residual_signal));
-plot(freq_axis1, 20*log10(abs(fft_residual_signal)));
-xlabel('频率 (Hz)');ylabel('幅度 (dB)');title('预测残差信号的频谱');
-
-
-
-reconstructed_signal = filter(1, a, residual_signal);
-% 比较重构信号和原信号
-figure;
-subplot(3, 1, 1);
-plot(time_voiced, frame_voiced);
-xlabel('时间 (秒)');
-ylabel('振幅');
-title('原始语音帧');
-subplot(3, 1, 2);
-plot(time_voiced, reconstructed_signal);
-xlabel('时间 (秒)');
-ylabel('振幅');
-title('重构语音帧');
-% 比较重构信号和原信号的差异
-subplot(3, 1, 3);
-plot(time_voiced, frame_voiced - reconstructed_signal);
-xlabel('时间 (秒)');
-ylabel('差异');
-title('重构信号与原信号的差异');
+subplot(2,1,2);
+plot((1:length(autocorr_unvoiced_positive)), autocorr_unvoiced_positive);
+xlabel('时间点');
+ylabel('自相关系数');
+title('浊音语音的自相关函数');

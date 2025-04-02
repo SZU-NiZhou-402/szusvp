@@ -13,8 +13,8 @@ frames = buffer(y, frame_length_samples, overlap, 'nodelay');
 num_frames = size(frames, 2);
 
 frame_silence = frames(:, 300);
-frame_voiced = frames(:,35);
-frame_unvoiced = frames(:, 329);
+frame_voiced = frames(:,64);
+frame_unvoiced = frames(:, 230);
 
 %计算对数幅度谱
 silence_spec = 20 * log10(abs(fft(frame_silence)));
