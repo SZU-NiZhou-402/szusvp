@@ -23,4 +23,4 @@ x = x * 32767; % 缩放到16位范围 (-32768 到 32767)
 x = int16(x); % 转换为16位整数
 
 % 保存音频文件
-audiowrite('ex3/task1_a.wav', double(x)/32767, fs); % 转回浮点数保存
+audiowrite('ex3/task1.wav', double(x)/32767, fs); % 转回浮点数保存
