@@ -12,8 +12,10 @@ overlap = frame_length_samples - frame_shift_samples;
 frames = buffer(y, frame_length_samples, overlap, 'nodelay');
 num_frames = size(frames, 2);
 
-frame_voiced = frames(:,64);
+frame_silence = frames(:, 8);
+frame_voiced = frames(:,104);
 frame_unvoiced = frames(:, 230);
+
 n = length(frame_voiced);
 autocorr_voiced = xcorr(frame_voiced, 'coeff');
 autocorr_unvoiced = xcorr(frame_unvoiced, 'coeff');
