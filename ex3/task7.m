@@ -24,7 +24,7 @@ P = 20; % LPC阶数
 residual_signal = filter(a, 1, target_voice);
 
 fft_frame = fft(target_voice);
-fft_frame = fft_frame(1:length(fft_frame)/2); 
+fft_frame = fft_frame(1:length(fft_frame)/2);
 freq_axis = linspace(0, Fs/2, length(fft_frame));
 
 time_voiced = (0:length(target_voice)-1) / Fs;
